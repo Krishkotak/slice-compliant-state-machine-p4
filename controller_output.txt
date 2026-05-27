@@ -1,0 +1,92 @@
+(p4dev-python-venv) p4@p4dev:~/tutorials/exercises/cffyp$ python3 controller.py --test all
+[init] C1 final τ = 0xA9F88B32
+[init] C2 final τ = 0x3D25A80D
+[ctrl] connecting to s1 @ 127.0.0.1:50051
+[ctrl]   ✓ s1 pipeline loaded
+[ctrl] connecting to s2 @ 127.0.0.1:50052
+[ctrl]   ✓ s2 pipeline loaded
+[ctrl] connecting to s3 @ 127.0.0.1:50053
+[ctrl]   ✓ s3 pipeline loaded
+[ctrl] connecting to s4 @ 127.0.0.1:50054
+[ctrl]   ✓ s4 pipeline loaded
+[ctrl] connecting to s5 @ 127.0.0.1:50055
+[ctrl]   ✓ s5 pipeline loaded
+[ctrl] connecting to s6 @ 127.0.0.1:50056
+[ctrl]   ✓ s6 pipeline loaded
+[ctrl] connecting to s7 @ 127.0.0.1:50057
+[ctrl]   ✓ s7 pipeline loaded
+
+[ctrl] provisioning chain C1 …
+
+[ctrl] provisioning chain C2 …
+    [warn] S1 rejected SCSMIngress.ingress_init: 
+    [warn] S1 rejected SCSMIngress.predecessor_check: 
+    [warn] S6 rejected SCSMIngress.predecessor_check: 
+    [warn] S6 rejected SCSMIngress.predecessor_check: 
+    [warn] S1 rejected SCSMIngress.tau_update: 
+    [warn] S6 rejected SCSMIngress.tau_update: 
+    [warn] S6 rejected SCSMIngress.is_egress_node: 
+    [warn] S1 rejected SCSMIngress.forwarding: 
+    [warn] S6 rejected SCSMIngress.forwarding: 
+
+[ctrl] all tables provisioned.
+
+============================================================
+TEST  : scenario_1_compliant_P1
+DESC  : Compliant traversal along P1 (S1→S2→S3→S6) with chain C1. Packet must reach H2 classified as compliant.
+PATH  : [1, 2, 3, 6]
+EXPECT: COMPLIANT at S6 — chain_idx=3 == k=3
+
+  Trace:
+    node  1: ✓ topology OK
+    node  2: ✓ topology OK
+    node  3: ✓ topology OK
+    node  6: ✓ topology OK
+
+  → COMPLIANT ✓  τ=0xA9F88B32
+============================================================
+
+============================================================
+TEST  : scenario_1_compliant_P2
+DESC  : Compliant traversal along P2 (S1→S4→S5→S6) with chain C2. Packet must reach H2 classified as compliant.
+PATH  : [1, 4, 5, 6]
+EXPECT: COMPLIANT at S6 — chain_idx=3 == k=3
+
+  Trace:
+    node  1: ✓ topology OK
+    node  4: ✓ topology OK
+    node  5: ✓ topology OK
+    node  6: ✓ topology OK
+
+  → COMPLIANT ✓  τ=0x3D25A80D
+============================================================
+
+============================================================
+TEST  : scenario_2_chain_bypass
+DESC  : Service-chain violation: C1 packet routed S1→S2→S6, skipping mandatory S3. At S6 chain_idx=2 < k=3.
+PATH  : [1, 2, 6]
+EXPECT: VIOLATION at S6 — chain_idx < k (S3 bypassed)
+
+  Trace:
+    node  1: ✓ topology OK
+    node  2: ✓ topology OK
+    node  6: ✗ TOPOLOGY VIOLATION (prev=2 ∉ [3, 5])
+
+  → Violation flag carried to egress.
+============================================================
+
+============================================================
+TEST  : scenario_3_topology_violation
+DESC  : Topology violation: packet routed S1→S4→SX→S5→S6. S5 receives prev_node=SX(7) which is not in Prev(S5). Violation flag set.
+PATH  : [1, 4, 7, 5, 6]
+EXPECT: VIOLATION at S5 — SX(7) not in authorized predecessor set
+
+  Trace:
+    node  1: ✓ topology OK
+    node  4: ✓ topology OK
+    node  7: ✗ TOPOLOGY VIOLATION (prev=4 ∉ [])
+    node  5: ✗ TOPOLOGY VIOLATION (prev=7 ∉ [4])
+    node  6: ✓ topology OK
+
+  → Violation flag carried to egress.
+============================================================

@@ -1,0 +1,14 @@
+mininet> h2 tcpdump -i eth0 -n -A udp -c 1 > poc_success.txt 2>&1 &
+mininet> h1 python3 -c "from scapy.all import Ether, IP, UDP, sendp; sendp(Ether(src='08:00:00:00:01:11', dst='08:00:00:00:02:22')/IP(src='10.0.1.1', dst='10.0.2.2')/UDP(dport=80)/'SCSM_POC_SUCCESS', iface='eth0')"
+.
+Sent 1 packets.
+mininet> h2 cat poc_success.txt
+tcpdump: verbose output suppressed, use -v[v]... for full protocol decode
+listening on eth0, link-type EN10MB (Ethernet), snapshot length 262144 bytes
+08:23:08.297080 IP 10.0.1.1.53 > 10.0.2.2.80: 21315 updateD+ [b2&3=0x534d] [20291a] [24400q] [24403n] [21827au] [|domain]
+E..,....@.c.
+...
+....5.P..G.SCSM_POC_SUCCESS
+1 packet captured
+1 packet received by filter
+0 packets dropped by kernel

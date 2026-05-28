@@ -12,8 +12,7 @@ This project is designed to run within the standard [P4 Tutorial VM environment]
 
 ## topology 
 
-![topology for poc][topology.png]
-
+![Topology for PoC](topology.png)
 ---
 
 ## How to Run

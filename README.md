@@ -12,7 +12,7 @@ This project is designed to run within the standard [P4 Tutorial VM environment]
 
 ## Topology Used
 
-![Topology for PoC](topology.png)
+![Topology for PoC](<img width="380" height="255" alt="Screenshot 2026-05-28 at 12 23 04 PM" src="https://github.com/user-attachments/assets/0c40e7b7-8dcc-494c-84a2-554f4fff0a28" />)
 
 *Fig. 1: Topology for PoC*
 

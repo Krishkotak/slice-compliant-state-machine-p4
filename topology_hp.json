@@ -1,0 +1,117 @@
+{
+  "hosts": {
+    "h1": {
+      "ip": "10.0.1.1/24",
+      "mac": "08:00:00:00:01:11",
+      "commands": [
+        "route add default gw 10.0.1.10 dev eth0",
+        "arp -i eth0 -s 10.0.1.10 08:00:00:00:01:00"
+      ]
+    },
+    "h2": {
+      "ip": "10.0.2.2/24",
+      "mac": "08:00:00:00:02:22",
+      "commands": [
+        "route add default gw 10.0.2.20 dev eth0",
+        "arp -i eth0 -s 10.0.2.20 08:00:00:00:02:00"
+      ]
+    },
+    "h3": {
+      "ip": "10.0.3.3/24",
+      "mac": "08:00:00:00:03:33",
+      "commands": [
+        "python3 -u reflector.py eth0 > /tmp/h3.log 2>&1 &"
+      ]
+    },
+    "h4": {
+      "ip": "10.0.4.4/24",
+      "mac": "08:00:00:00:04:44",
+      "commands": [
+        "python3 -u reflector.py eth0 > /tmp/h4.log 2>&1 &"
+      ]
+    }
+  },    
+  "switches": {
+    "s1": { "cpu_port": "510" },
+    "s2": { "cpu_port": "510" },
+    "s3": { "cpu_port": "510" },
+    "s4": { "cpu_port": "510" },
+    "s5": { "cpu_port": "510" },
+    "s6": { "cpu_port": "510" },
+    "s7": { "cpu_port": "510" } 
+  },
+"links": [
+    ["h1", "s1-p1"],
+    ["h2", "s6-p1"],
+    ["s1-p2", "s2-p1"],
+    ["s1-p3", "s4-p1"],
+    ["s2-p2", "s3-p1"],
+    ["s3-p2", "s6-p2"],
+    ["s4-p2", "s5-p1"],
+    ["s4-p3", "s7-p1"],   
+    ["s7-p2", "s5-p2"],   
+    ["s5-p3", "s6-p3"],
+    ["h3","s2-p3"],
+    ["h4","s2-p4"]
+  ],
+  "slice": {
+    "id": 1,
+    "authorized_nodes": [1, 2, 3, 4, 5, 6],
+    "unauthorized_nodes": [7],
+    "authorized_edges": [
+      [1, 2], [1, 4],
+      [2, 2],
+      [2, 3],
+      [3, 6],
+      [4, 5],
+      [5, 6]
+    ],
+    "paths": {
+      "P1": [1, 2, 2, 2, 3, 6],
+      "P2": [1, 4, 5, 6]
+    },
+    "service_chains": {
+      "C1": { "id": 1, "chain": [2, 2, 2, 3, 6], "path": "P1" },
+      "C2": { "id": 2, "chain": [4, 5, 6], "path": "P2" }
+    },
+    "tau_seeds": {
+      "C1": "0xAABBCCDD",
+      "C2": "0xDEADBEEF"
+    },
+    "hop_keys": {
+      "C1": { "2": "0x11223344", "3": "0x55667788", "6": "0x99AABBCC" },
+      "C2": { "4": "0xCAFEBABE", "5": "0xFACEFEED", "6": "0x0D15EA5E" }
+    }
+  },
+  "node_ids": {
+    "s1": 1, "s2": 2, "s3": 3,
+    "s4": 4, "s5": 5, "s6": 6,
+    "s7": 7             
+  },
+  "test_scenarios": {
+    "scenario_1_compliant_P1": {
+      "description": "Compliant traversal along P1 (S1→S2→S3→S6) with chain C1. Packet must reach H2 classified as compliant.",
+      "chain": "C1",
+      "path": [1, 2, 3, 6],
+      "expected_outcome": "COMPLIANT at S6 — chain_idx=3 == k=3"
+    },
+    "scenario_1_compliant_P2": {
+      "description": "Compliant traversal along P2 (S1→S4→S5→S6) with chain C2. Packet must reach H2 classified as compliant.",
+      "chain": "C2",
+      "path": [1, 4, 5, 6],
+      "expected_outcome": "COMPLIANT at S6 — chain_idx=3 == k=3"
+    },
+    "scenario_2_chain_bypass": {
+      "description": "Service-chain violation: C1 packet routed S1→S2→S6, skipping mandatory S3. At S6 chain_idx=2 < k=3.",
+      "chain": "C1",
+      "path": [1, 2, 6],
+      "expected_outcome": "VIOLATION at S6 — chain_idx < k (S3 bypassed)"
+    },
+    "scenario_3_topology_violation": {
+      "description": "Topology violation: packet routed S1→S4→SX→S5→S6. S5 receives prev_node=SX(7) which is not in Prev(S5). Violation flag set.",
+      "chain": "C2",
+      "path": [1, 4, 7, 5, 6],
+      "expected_outcome": "VIOLATION at S5 — SX(7) not in authorized predecessor set"
+    }
+  }
+}

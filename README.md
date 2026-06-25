@@ -14,7 +14,6 @@ This project is designed to run within the standard [P4 Tutorial VM environment]
 
 ![Topology for PoC](topology.png)
 ![Hairpin Topology for service chain POC](hairpin_topo.png)
-
 ![Topology for PoC](topology2.png)
 ---
 
